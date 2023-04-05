@@ -12,7 +12,8 @@ require('dotenv').config()
 //middleware
 app.use(morgan('tiny'));
 app.use(cors());
-app.options('*', cors())
+app.options('*', cors());
+app.use('/public/uploads', express.static(__dirname + '/public/uploads'));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));

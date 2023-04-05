@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const orderItemSchema = mongoose.Schema({
     quantity:{
@@ -11,10 +11,10 @@ const orderItemSchema = mongoose.Schema({
     }
 })
 
-orderItemSchema.virtual('id').get(function(){
-    return this._id.toHexString();
-});
-orderItemSchema.set('toJSON',{
-    virtual: true,
-});
-exports.OrderItem = mongoose.model('Order', orderItemSchema)
+// orderItemSchema.virtual('id').get(function(){
+//     return this._id.toHexString();
+// });
+// orderItemSchema.set('toJSON',{
+//     virtual: true,
+// });
+exports.OrderItem = mongoose.model('OrderItem', orderItemSchema);

@@ -1,11 +1,10 @@
-const {order, Order} = require('../models/order');
+const {Order} = require('../models/order');
 const express = require('express');
-const { route } = require('./categories');
+const { OrderItem } = require('../models/order-item');
 const router = express.Router(); 
 
 router.get('/' , async (req, res)=>{
-    const orderList = await order.find();
-    // .populate('user', 'name').sort({'dateOrdered': -1})
+    const orderList = await Order.find().populate('user', 'name').sort({'dateOrdered': -1});
     if(!orderList){
         res.status(500).json({success: false })
     }
@@ -13,9 +12,10 @@ router.get('/' , async (req, res)=>{
 })
 
 router.get('/:id' , async (req, res)=>{
-    const order = await order.findById(req.params.id)
+    const order = await Order.findById(req.params.id)
     .populate('user', 'name')
-    .populate({ path: 'orderItems', populate:{ 
+    .populate({ 
+        path: 'orderItems', populate:{ 
         path: 'product', populate: 'category'}
     });
 
@@ -43,7 +43,7 @@ router.post('/', async (req, res)=>{
         const totalPrice = orderItem.product.price * orderItem.quantity;
         return totalPrice
     }))
-    const totalPrice = totalPrices.reduce((a,b) => a + b, 0 )
+    const totalPrice = totalPrices.reduce((a,b) => a + b, 0 );
     console.log(totalPrices);
 
 
@@ -57,7 +57,7 @@ router.post('/', async (req, res)=>{
         phone: req.body.phone,
         status: req.body.status,
         totalPrice: totalPrice,
-        user: req.body.user
+        user: req.body.user,
     })
     // "orderItems": " ",
     // "shippingAddress1": " ",
@@ -108,7 +108,7 @@ router.delete('/:id', (req, res)=>{
 
 router.get('/get/totalsales',async (req, res)=>{
     const totalSales = await Order.aggregate([
-        {$group: {_id: null, totalsales:{ $sum: '$totalPrice'}}}
+        { $group: {_id: null, totalsales:{ $sum: '$totalPrice'}}}
     ])
     if(!totalSales){
         return res.status(400).send('The order sales cannot be generated')
@@ -125,6 +125,18 @@ router.get('/get/count',async (req, res) =>{ // its not working
         {
             orderCount: orderCount
         });
+})
+
+router.get('/get/userorders/:userid' , async (req, res)=>{
+    const userOrderList = await Order.find({user: req.params.userid}).populate({ 
+        path: 'orderItems', populate:{ 
+        path: 'product', populate: 'category'}
+    }).sort({'dateOrdered': -1});
+    
+    if(!userOrderList){
+        res.status(500).json({success: false })
+    }
+    res.send(userOrderList);
 })
 
 module.exports= router;

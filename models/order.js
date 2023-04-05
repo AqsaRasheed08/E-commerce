@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const orderSchema = mongoose.Schema({
     orderItems:[{
@@ -28,6 +28,10 @@ const orderSchema = mongoose.Schema({
     phone:{
         type: String,
         required: true,
+    },
+    status:{
+        type: String,
+        required: true,
         default: 'Pending',
     },
     totalPrice:{
@@ -36,12 +40,11 @@ const orderSchema = mongoose.Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     },
     dateOrdered:{
         type: Date,
-        default: Date.now(),
-    }
+        default: Date.now,
+    },
 })
 
 orderSchema.virtual('id').get(function(){
@@ -50,4 +53,4 @@ orderSchema.virtual('id').get(function(){
 orderSchema.set('toJSON',{
     virtual: true,
 });
-exports.Order = mongoose.model('Order', orderSchema)
+exports.Order = mongoose.model('Order', orderSchema);
