@@ -25,32 +25,37 @@ router.get('/:id' , async (req, res)=>{
     res.send(order);
 })
 
-router.post('/', async (req, res)=>{
-    const orderItemsIds = Promise.all(req.body.orderItems.map(async orderItem =>{
-        let newOrderItem = new OrderItem({
+router.post('/', async (req, res) => {
+    try {
+      // Create OrderItems and get their ids
+      const orderedProductIds = await Promise.all(
+        req.body.orderItems.map(async (orderItem) => {
+          const newOrderItem = new OrderItem({
             quantity: orderItem.quantity,
-            product: orderItem.product
+            product: orderItem.product,
+          });
+          const savedOrderItem = await newOrderItem.save();
+          return savedOrderItem._id;
         })
-        newOrderItem = await newOrderItem.save();
-
-        return newOrderItem._id;
-    }))
-    const orderItemsIdsResolved = await orderItemsIds;
-    // console.log(orderItemsIdsResolved);
-
-    const totalPrices =await Promise.all(orderItemsIdsResolved.map(async (orderItemId)=>{
-        const orderItem = await OrderItem.findById(orderItemId).populate('product','price');
-        const totalPrice = orderItem.product.price * orderItem.quantity;
-        return totalPrice
-    }))
-    const totalPrice = totalPrices.reduce((a,b) => a + b, 0 );
-    console.log(totalPrices);
-
-
-    let order = new Order({
-        orderItems: orderItemsIdsResolved,
-        shippingAddress1: req.body.shippingAddress1,
-        shippingAddress2: req.body.shippingAddress2,
+      );
+  
+      // Calculate total price of the order
+      const totalPrices = await Promise.all(
+        orderedProductIds.map(async (productId) => {
+          const orderItem = await OrderItem.findById(productId).populate(
+            'product',
+            'price'
+          );
+          return orderItem.product.price * orderItem.quantity;
+        })
+      );
+      const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
+  
+      // Create and save the order
+      const order = new Order({
+        orderItems: orderedProductIds,
+        ShippingAddress1: req.body.ShippingAddress1,
+        ShippingAddress2: req.body.ShippingAddress2,
         city: req.body.city,
         zip: req.body.zip,
         country: req.body.country,
@@ -58,25 +63,20 @@ router.post('/', async (req, res)=>{
         status: req.body.status,
         totalPrice: totalPrice,
         user: req.body.user,
-    })
-    // "orderItems": " ",
-    // "shippingAddress1": " ",
-    // "shippingAddress2": " ",
-    // "city": " ",
-    // "zip": " ",
-    // "country": " ",
-    // "phone": " ",
-    // "status": " ",
-    // "totalPrice": " ",
-    // "user": " "
-    order = await order.save();
-
-    if(!order)
-    return res.status(404).send('the order cannot be created')
-
-    res.send(order);
-})
-
+      });
+      const savedOrder = await order.save();
+  
+      if (!savedOrder) {
+        return res.status(404).send('The order cannot be created');
+      }
+  
+      res.send(savedOrder);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+  
 router.put('/:id',async (req, res)=>{
     const order = await Order.findByIdAndUpdate(
         req.params.id,
@@ -116,16 +116,21 @@ router.get('/get/totalsales',async (req, res)=>{
     res.send({totalsales: totalSales.pop().totalsales})
 })
 
-router.get('/get/count',async (req, res) =>{ // its not working 
-    const orderCount = await Order.countDocuments((count)=> count)
-    if(!orderCount){
-        res.status(500).json({success: false})
-    }  
-    res.send(
-        {
-            orderCount: orderCount
-        });
-})
+
+router.get('/get/count', async (req, res) => {
+    try {
+      const orderCount = await Order.countDocuments({});
+      if (!orderCount) {
+        return res.status(500).json({ success: false });
+      }
+      res.json({
+        orderCount: orderCount,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
 
 router.get('/get/userorders/:userid' , async (req, res)=>{
     const userOrderList = await Order.find({user: req.params.userid}).populate({ 
