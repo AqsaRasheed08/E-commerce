@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
         const isValid = FILE_TYPE_MAP[file.mimetype];
         let uploadError = new Error('invalid image type');
 
-        if(isValid){
+        if(isValid){ 
             uploadError=null
         }
         cb(uploadError, 'public/uploads')
@@ -67,10 +67,9 @@ router.post(`/`, uploadOptions.single('image') , async (req, res)=>{
         description: req.body.description,
         richDescription: req.body.richDescription,
         image: `${basePath}${fileName}`, //"https://localhost:5000/public/upload/image-2323232.jpeg"
-        // images: req.body.images,
         brand: req.body.brand,
         price: req.body.price,
-        category: req.body.category,
+        category: req.body.category, 
         countInStock: req.body.countInStock,
         rating: req.body.rating,
         numReviews: req.body.numReviews,
